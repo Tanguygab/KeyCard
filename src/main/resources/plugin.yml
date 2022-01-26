@@ -1,0 +1,8 @@
+name: KeyCard
+version: 1.0
+main: io.github.tanguygab.keycard.KeyCardPlugin
+api-version: 1.18
+authors: [ Tanguygab ]
+description: An up-to-date keycard plugin, since there aren't any...
+commands:
+  keycard:
