@@ -1,6 +1,7 @@
 package io.github.tanguygab.keycard.scanner;
 
 import io.github.tanguygab.keycard.KeyCardPlugin;
+import io.github.tanguygab.keycard.MapRender;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -8,11 +9,15 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
@@ -40,6 +45,15 @@ public class Scanner {
             KeyCardPlugin.getInstance().removeScanner(this);
             return;
         }
+
+        ItemStack map = new ItemStack(Material.FILLED_MAP);
+        MapMeta meta = (MapMeta) map.getItemMeta();
+        MapView view = Bukkit.getServer().createMap(Bukkit.getServer().getWorlds().get(0));
+        view.addRenderer(new MapRender());
+        meta.setMapView(view);
+        map.setItemMeta(meta);
+        ((ItemFrame)entity).setItem(map);
+
         Block block = entity.getLocation().getBlock();
         if (block.getType() != Material.STONE_BUTTON)
             block.setType(Material.STONE_BUTTON);

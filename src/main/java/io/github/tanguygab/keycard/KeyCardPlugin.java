@@ -16,6 +16,8 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.MapMeta;
+import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -45,9 +47,11 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
         try {
             if (!file.exists()) file.createNewFile();
             scannersFile = new YamlConfigurationFile(null, file);
+            Map<String,Object> fileValues = new HashMap<>(scannersFile.getValues());
+            fileValues.forEach((name,map)-> scanners.put(name,new Scanner(name, (Map<String, Object>) map)));
         } catch (Exception e) {e.printStackTrace();}
-        scannersFile.getValues().forEach((name,map)-> scanners.put(name,new Scanner(name, (Map<String, Object>) map)));
         getServer().getPluginManager().registerEvents(new Listener(this),this);
+
     }
     @Override
     public void onDisable() {

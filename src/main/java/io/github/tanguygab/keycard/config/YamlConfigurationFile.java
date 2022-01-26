@@ -75,7 +75,7 @@ public class YamlConfigurationFile extends ConfigurationFile {
 			writer.close();
 			if (!hasHeader()) fixHeader();
 		} catch (Throwable e) {
-			System.out.println("[TAB-BukkitBridge] Failed to save yaml file " + file.getPath() + " with content " + values.toString());
+			System.out.println("[KeyCard] Failed to save yaml file " + file.getPath() + " with content " + values.toString());
 			e.printStackTrace();
 		}
 	}
