@@ -4,6 +4,7 @@ import io.github.tanguygab.keycard.config.ConfigurationFile;
 import io.github.tanguygab.keycard.config.YamlConfigurationFile;
 import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -97,13 +98,24 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                 onDisable();
                 onEnable();
             }
+            case "scanners" -> {
+                String msg = "&aList of scanners &8(&7"+scanners.size()+"&8)&a:";
+                for (Scanner scanner : scanners.values()) {
+                    msg += "\n &8- &3" + scanner.getName() + " &8(&7" + getServer().getOfflinePlayer(scanner.getOwner()).getName()+"&8)";
+                    Entity entity = getServer().getEntity(scanner.getFrameID());
+                    if (entity == null) continue;
+                    Location loc = entity.getLocation();
+                    msg+=" &b"+loc.getX()+" &8|&b "+loc.getY()+" &8|&b "+loc.getZ();
+                }
+                sender.sendMessage(Utils.colors(msg));
+            }
         }
         return true;
     }
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return List.of("give","reload");
+        if (args.length == 1) return List.of("give","reload", "scanners");
         if ("give".equalsIgnoreCase(args[0]) && args.length == 2) return List.of("keycard","scanner","multicard");
         return null;
     }
