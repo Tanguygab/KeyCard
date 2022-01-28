@@ -117,15 +117,10 @@ public class Listener implements org.bukkit.event.Listener {
         }
 
         if (!scanner.canUse(p.getInventory().getItem(hand))) return false;
-        Powerable data = (Powerable) block.getBlockData();
-        boolean mode = scanner.getMode() == ScannerMode.ACTIVE_ON_SWIPE;
-        data.setPowered(mode);
 
-        block.setBlockData(data);
-        plugin.getServer().getScheduler().runTaskLater(plugin,()->{
-            data.setPowered(!mode);
-            block.setBlockData(data);
-        },15);
+        ScannerMode mode = scanner.getMode();
+        mode.load(scanner);
+        plugin.getServer().getScheduler().runTaskLater(plugin,()-> mode.unload(scanner),15);
         return true;
     }
 

@@ -76,15 +76,20 @@ public class Scanner {
     }
 
     public ScannerMode switchMode() {
+        if (mode == ScannerMode.LEVER) KeyCardPlugin.get().scannersFile.set(name+".lever",null);
         mode = ScannerMode.switchMode(mode);
         KeyCardPlugin.get().scannersFile.set(name+".mode",mode+"");
 
-        Block block = Bukkit.getServer().getEntity(frameID).getLocation().getBlock();
-        Powerable data = (Powerable)block.getBlockData();
-        data.setPowered(mode == ScannerMode.INACTIVE_ON_SWIPE);
-        block.setBlockData(data);
+        mode.unload(this);
 
         return mode;
+    }
+
+    public void setStatus(boolean activated) {
+        Block block = Bukkit.getServer().getEntity(frameID).getLocation().getBlock();
+        Powerable data = (Powerable) block.getBlockData();
+        data.setPowered(activated);
+        block.setBlockData(data);
     }
 
     public void open(Player p) {
