@@ -3,6 +3,7 @@ package io.github.tanguygab.keycard;
 import io.github.tanguygab.keycard.scanner.RenamingScanner;
 import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,14 +11,18 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -42,8 +47,8 @@ public class Listener implements org.bukkit.event.Listener {
         ItemStack item = e.getItemStack();
         if (item == null || item.getType() != Material.ITEM_FRAME || item.getItemMeta() == null) return;
         PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
-        if (!data.has(KeyCardPlugin.getInstance().isScannerKey, PersistentDataType.BYTE)) return;
-        boolean isScanner = data.get(KeyCardPlugin.getInstance().isScannerKey,PersistentDataType.BYTE) == (byte)1;
+        if (!data.has(Utils.isScannerKey, PersistentDataType.BYTE)) return;
+        boolean isScanner = data.get(Utils.isScannerKey,PersistentDataType.BYTE) == (byte)1;
         if (!isScanner) return;
         Entity entity = e.getEntity();
         if (entity.getType() != EntityType.ITEM_FRAME) return;
@@ -54,7 +59,24 @@ public class Listener implements org.bukkit.event.Listener {
     @EventHandler
     public void onScannerBreak(HangingBreakEvent e) {
         Scanner scanner = plugin.getScanner(e.getEntity());
-        if (scanner != null) plugin.removeScanner(scanner);
+        if (scanner == null) return;
+        onScannerBreak(e.getEntity().getLocation(),scanner);
+    }
+
+    @EventHandler
+    public void onItemInFrameBreak(EntityDamageByEntityEvent e) {
+        Scanner scanner = plugin.getScanner(e.getEntity());
+        if (scanner == null) return;
+        Entity entity = e.getEntity();
+        Location loc = entity.getLocation();
+        onScannerBreak(loc,scanner);
+        entity.remove();
+        loc.getBlock().setType(Material.AIR);
+    }
+
+    public void onScannerBreak(Location loc, Scanner scanner) {
+        plugin.removeScanner(scanner);
+        loc.getWorld().dropItem(loc,Utils.craftScanner());
     }
 
     @EventHandler
@@ -129,13 +151,13 @@ public class Listener implements org.bukkit.event.Listener {
         switch (name) {
             case "Link Keycard" -> {
                 ItemStack card = e.getView().getItem(1);
-                if (card == null || card.getType().isAir() || card.getItemMeta() == null || !card.getItemMeta().getPersistentDataContainer().has(plugin.isKeycardKey,PersistentDataType.BYTE)) {
+                if (!Utils.isKeycard(card)) {
                     p.sendMessage("You need to insert a keycard to link!");
                     return;
                 }
                 ItemMeta meta = card.getItemMeta();
-                meta.setLore(List.of("",KeyCardPlugin.colors("&7Scanner: &f")+scannerName));
-                meta.getPersistentDataContainer().set(plugin.scannerIdKey,PersistentDataType.STRING,scannerName);
+                meta.setLore(List.of("",Utils.colors("&7Scanner: &f")+scannerName));
+                meta.getPersistentDataContainer().set(Utils.scannerIdKey,PersistentDataType.STRING,scannerName);
                 card.setItemMeta(meta);
                 p.sendMessage("Keycard linked!");
             }
@@ -144,7 +166,7 @@ public class Listener implements org.bukkit.event.Listener {
                 ScannerMode newMode = scanner.switchMode();
 
                 ItemMeta meta = item.getItemMeta();
-                meta.setLore(List.of("",KeyCardPlugin.colors("&7Mode: ")+newMode.getDesc()));
+                meta.setLore(List.of("",Utils.colors("&7Mode: ")+newMode.getDesc()));
                 item.setItemMeta(meta);
                 item.setType(newMode.getMat());
             }
@@ -152,15 +174,33 @@ public class Listener implements org.bukkit.event.Listener {
                 ItemStack cursor = e.getCursor();
                 if (item.getType().isAir()) {
                     if (cursor.getItemMeta() == null) return;
-                    if (cursor.getItemMeta().getPersistentDataContainer().has(plugin.isKeycardKey,PersistentDataType.BYTE))
+                    if (cursor.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey,PersistentDataType.BYTE))
                         e.setCancelled(false);
                 } else {
                     if (item.getItemMeta() == null) return;
-                    if (item.getItemMeta().getPersistentDataContainer().has(plugin.isKeycardKey, PersistentDataType.BYTE))
+                    if (item.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey, PersistentDataType.BYTE))
                         e.setCancelled(false);
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent e) {
+        if (!e.getView().getTitle().startsWith("Scanner menu: ")) return;
+        ItemStack card = e.getView().getItem(1);
+        if (Utils.isKeycard(card)) e.getPlayer().getInventory().addItem(card);
+    }
+
+    @EventHandler
+    public void checkingIfItemFramesAreLoaded(ChunkLoadEvent e) {
+        plugin.scanners.forEach((s, scanner) -> {
+            if (scanner.isLoaded()) return;
+            Entity entity = Bukkit.getServer().getEntity(scanner.getFrameID());
+            if (entity == null) return;
+            Utils.addMap(entity,scanner);
+            scanner.setLoaded();
+        });
     }
 
 }

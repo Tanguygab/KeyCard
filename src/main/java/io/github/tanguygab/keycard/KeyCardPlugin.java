@@ -3,9 +3,8 @@ package io.github.tanguygab.keycard;
 import io.github.tanguygab.keycard.config.ConfigurationFile;
 import io.github.tanguygab.keycard.config.YamlConfigurationFile;
 import io.github.tanguygab.keycard.scanner.Scanner;
-import org.bukkit.ChatColor;
+import io.github.tanguygab.keycard.scanner.ScannerMode;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -16,15 +15,14 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.MapMeta;
-import org.bukkit.map.MapView;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
 
@@ -32,23 +30,26 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
 
     public ConfigurationFile scannersFile;
     public final Map<String, Scanner> scanners = new HashMap<>();
-    public NamespacedKey scannerIdKey = NamespacedKey.fromString("scanner-id",this);
-    public NamespacedKey isScannerKey = NamespacedKey.fromString("is-scanner",this);
-    public NamespacedKey isKeycardKey = NamespacedKey.fromString("is-keycard",this);
+    public Image image;
 
-    public static KeyCardPlugin getInstance() {
+    public static KeyCardPlugin get() {
         return instance;
     }
 
     @Override
     public void onEnable() {
         instance = this;
+        image = new ImageIcon(getClass().getResource("/scanner.png")).getImage();
         File file = new File(getDataFolder(), "scanners.yml");
         try {
             if (!file.exists()) file.createNewFile();
             scannersFile = new YamlConfigurationFile(null, file);
-            Map<String,Object> fileValues = new HashMap<>(scannersFile.getValues());
-            fileValues.forEach((name,map)-> scanners.put(name,new Scanner(name, (Map<String, Object>) map)));
+            Map<String,Object> cfgmap = new HashMap<>(scannersFile.getValues());
+            for (String name : cfgmap.keySet()) {
+                Map<String,String> map = (Map<String, String>) cfgmap.get(name);
+                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.valueOf(map.get("mode")));
+                addScanner(scanner);
+            }
         } catch (Exception e) {e.printStackTrace();}
         getServer().getPluginManager().registerEvents(new Listener(this),this);
 
@@ -61,7 +62,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage(colors("&m                                        \n"
+            sender.sendMessage(Utils.colors("&m                                        \n"
                     + "&a[KeyCard] &7" + getDescription().getVersion() + "\n"
                     + " - &3/keycard\n"
                     + "   &8| &aDefault help page\n"
@@ -78,20 +79,11 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                 PlayerInventory inv = ((Player)sender).getInventory();
                 switch (arg.toLowerCase()) {
                     case "keycard" -> {
-                        ItemStack keycard = new ItemStack(Material.PAPER);
-                        ItemMeta meta = keycard.getItemMeta();
-                        meta.setDisplayName(colors("&8[&6Keycard&8]"));
-                        meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
-                        meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,(byte)1);
-                        keycard.setItemMeta(meta);
+                        ItemStack keycard = Utils.craftKeycard();
                         inv.addItem(keycard);
                     }
                     case "scanner" -> {
-                        ItemStack scanner = new ItemStack(Material.ITEM_FRAME);
-                        ItemMeta meta = scanner.getItemMeta();
-                        meta.setDisplayName(colors("&8[&6Scanner&8]"));
-                        meta.getPersistentDataContainer().set(isScannerKey,PersistentDataType.BYTE,(byte)1);
-                        scanner.setItemMeta(meta);
+                        ItemStack scanner = Utils.craftScanner();
                         inv.addItem(scanner);
                     }
                     default -> sender.sendMessage("You have to specify `keycard` or `scanner`");
@@ -133,7 +125,4 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
         scannersFile.set(name,null);
     }
 
-    public static String colors(String str) {
-        return ChatColor.translateAlternateColorCodes('&',str);
-    }
 }
