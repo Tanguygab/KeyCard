@@ -64,7 +64,7 @@ public class Scanner {
     }
 
     public boolean canUse(ItemStack keycard) {
-        if (keycard.getItemMeta() == null || !keycard.getItemMeta().getPersistentDataContainer().has(Utils.scannerIdKey,PersistentDataType.STRING)) return false;
+        if (keycard == null || keycard.getItemMeta() == null || !keycard.getItemMeta().getPersistentDataContainer().has(Utils.scannerIdKey,PersistentDataType.STRING)) return false;
         PersistentDataContainer data = keycard.getItemMeta().getPersistentDataContainer();
         byte cardType = data.get(Utils.isKeycardKey,PersistentDataType.BYTE);
         String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);

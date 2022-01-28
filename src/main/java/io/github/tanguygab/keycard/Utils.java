@@ -113,12 +113,12 @@ public class Utils {
         PersistentDataContainer data = meta.getPersistentDataContainer();
         switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
             case 1 -> {
-                meta.setLore(List.of("",colors("&7Scanner: &ffNot Linked")));
+                meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
                 meta.getPersistentDataContainer().remove(scannerIdKey);
             }
             case 2 -> {
                 List<String> lore = meta.getLore();
-                lore.remove(" &7- &f" + scanner);
+                lore.remove(colors(" &7- &f" + scanner));
                 meta.setLore(lore);
                 String scanners = data.get(scannerIdKey,PersistentDataType.STRING);
                 List<String> scannersList = new ArrayList<>(List.of(scanners.split("\\|\\|")));

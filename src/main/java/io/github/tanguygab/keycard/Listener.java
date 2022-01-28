@@ -28,6 +28,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,7 +143,9 @@ public class Listener implements org.bukkit.event.Listener {
         e.setCancelled(true);
 
         Player p = plugin.getServer().getPlayer(e.getWhoClicked().getUniqueId());
+        assert p != null;
         String scannerName = e.getView().getTitle().replace("Scanner menu: ", "");
+        Scanner scanner = plugin.scanners.get(scannerName);
         ItemStack item = e.getCurrentItem();
         if (item == null) return;
 
@@ -156,9 +159,20 @@ public class Listener implements org.bukkit.event.Listener {
                 }
                 Utils.linkScannerToCard(card,scannerName);
                 p.sendMessage("Keycard linked!");
+                switchLinkItem(item,true);
+            }
+            case "Unlink Keycard" -> {
+                ItemStack card = e.getView().getItem(1);
+                if (!Utils.isKeycard(card)) {
+                    p.sendMessage("You need to insert a keycard to link!");
+                    return;
+                }
+
+                Utils.unlinkScannerToCard(card,scannerName);
+                p.sendMessage("Keycard unlinked!");
+                switchLinkItem(item,false);
             }
             case ("Switch Mode") -> {
-                Scanner scanner = plugin.scanners.get(scannerName);
                 ScannerMode newMode = scanner.switchMode();
 
                 ItemMeta meta = item.getItemMeta();
@@ -169,16 +183,39 @@ public class Listener implements org.bukkit.event.Listener {
             default -> {
                 ItemStack cursor = e.getCursor();
                 if (item.getType().isAir()) {
-                    if (cursor.getItemMeta() == null) return;
-                    if (cursor.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey,PersistentDataType.BYTE))
-                        e.setCancelled(false);
+                    processKeyCardMove(cursor,e,scanner);
                 } else {
-                    if (item.getItemMeta() == null) return;
-                    if (item.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey, PersistentDataType.BYTE))
-                        e.setCancelled(false);
+                    processKeyCardMove(item,e,scanner);
                 }
             }
         }
+    }
+
+    public void processKeyCardMove(ItemStack item, InventoryClickEvent e, Scanner scanner) {
+        if (e.isShiftClick()) return; // because ofc you can't get the slot where it got shift clicked
+        if (item == null || item.getItemMeta() == null) return;
+        if (!item.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey,PersistentDataType.BYTE)) return;
+        e.setCancelled(false);
+
+        if (e.getRawSlot() != 1) return;
+        ItemStack card = e.getCursor();
+        ItemStack linkItem = e.getView().getItem(0);
+        boolean canUse = scanner.canUse(card);
+        switchLinkItem(linkItem,canUse);
+
+
+    }
+    public void switchLinkItem(ItemStack linkItem, boolean canUse) {
+        ItemMeta linkItemMeta = linkItem.getItemMeta();
+        String linkItemName = ChatColor.stripColor(linkItemMeta.getDisplayName());
+        if (linkItemName.equals("Link Keycard") && canUse) {
+            linkItemMeta.setDisplayName(Utils.colors("&fUnlink Keycard"));
+            linkItemMeta.setLore(List.of("",Utils.colors("&7Keycard already linked!"),Utils.colors("&7Click to unlink it")));
+        } else if (linkItemName.equals("Unlink Keycard") && !canUse) {
+            linkItemMeta.setDisplayName(Utils.colors("&fLink Keycard"));
+            linkItemMeta.setLore(List.of("",Utils.colors("&7Insert your keycard in"),Utils.colors("&7the next slot to link it")));
+        }
+        linkItem.setItemMeta(linkItemMeta);
     }
 
     @EventHandler
