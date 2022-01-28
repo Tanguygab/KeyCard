@@ -11,7 +11,6 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -155,10 +154,7 @@ public class Listener implements org.bukkit.event.Listener {
                     p.sendMessage("You need to insert a keycard to link!");
                     return;
                 }
-                ItemMeta meta = card.getItemMeta();
-                meta.setLore(List.of("",Utils.colors("&7Scanner: &f")+scannerName));
-                meta.getPersistentDataContainer().set(Utils.scannerIdKey,PersistentDataType.STRING,scannerName);
-                card.setItemMeta(meta);
+                Utils.linkScannerToCard(card,scannerName);
                 p.sendMessage("Keycard linked!");
             }
             case ("Switch Mode") -> {

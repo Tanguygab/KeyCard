@@ -82,6 +82,10 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                         ItemStack keycard = Utils.craftKeycard();
                         inv.addItem(keycard);
                     }
+                    case "multicard" -> {
+                        ItemStack multicard = Utils.craftMultiKeycard();
+                        inv.addItem(multicard);
+                    }
                     case "scanner" -> {
                         ItemStack scanner = Utils.craftScanner();
                         inv.addItem(scanner);
@@ -99,7 +103,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) return List.of("give","name");
-        if ("give".equalsIgnoreCase(args[0]) && args.length == 2) return List.of("keycard","scanner");
+        if ("give".equalsIgnoreCase(args[0]) && args.length == 2) return List.of("keycard","scanner","multicard");
         return null;
     }
 

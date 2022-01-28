@@ -12,6 +12,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.List;
@@ -64,7 +65,14 @@ public class Scanner {
 
     public boolean canUse(ItemStack keycard) {
         if (keycard.getItemMeta() == null || !keycard.getItemMeta().getPersistentDataContainer().has(Utils.scannerIdKey,PersistentDataType.STRING)) return false;
-        return name.equals(keycard.getItemMeta().getPersistentDataContainer().get(Utils.scannerIdKey, PersistentDataType.STRING));
+        PersistentDataContainer data = keycard.getItemMeta().getPersistentDataContainer();
+        byte cardType = data.get(Utils.isKeycardKey,PersistentDataType.BYTE);
+        String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);
+        switch (cardType) {
+            case 1 -> {return name.equals(str);}
+            case 2 -> {return List.of(str.split("\\|\\|")).contains(name);}
+            default -> {return false;}
+        }
     }
 
     public ScannerMode switchMode() {
