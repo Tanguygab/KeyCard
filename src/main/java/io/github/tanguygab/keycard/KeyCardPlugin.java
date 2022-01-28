@@ -58,6 +58,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
     @Override
     public void onDisable() {
         HandlerList.unregisterAll(this);
+        scanners.clear();
     }
 
     @Override
