@@ -6,3 +6,4 @@ authors: [ Tanguygab ]
 description: An up-to-date keycard plugin, since there aren't any...
 commands:
   keycard:
+    permission: keycard.admin
