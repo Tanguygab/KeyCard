@@ -93,8 +93,9 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                     default -> sender.sendMessage("You have to specify `keycard` or `scanner`");
                 }
             }
-            case "name" -> {
-
+            case "reload" -> {
+                onDisable();
+                onEnable();
             }
         }
         return true;
@@ -102,7 +103,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return List.of("give","name");
+        if (args.length == 1) return List.of("give","reload");
         if ("give".equalsIgnoreCase(args[0]) && args.length == 2) return List.of("keycard","scanner","multicard");
         return null;
     }

@@ -1,6 +1,6 @@
 package io.github.tanguygab.keycard;
 
-import io.github.tanguygab.keycard.scanner.RenamingScanner;
+import io.github.tanguygab.keycard.scanner.NamingScanner;
 import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
 import org.bukkit.Bukkit;
@@ -28,7 +28,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +35,7 @@ import java.util.Map;
 public class Listener implements org.bukkit.event.Listener {
 
     private final KeyCardPlugin plugin;
-    private final Map<Player, RenamingScanner> renaming = new HashMap<>();
+    private final Map<Player, NamingScanner> naming = new HashMap<>();
 
     public Listener(KeyCardPlugin plugin) {
         this.plugin = plugin;
@@ -53,11 +52,19 @@ public class Listener implements org.bukkit.event.Listener {
         Entity entity = e.getEntity();
         if (entity.getType() != EntityType.ITEM_FRAME) return;
         Player p = e.getPlayer();
-        renaming.put(p,new RenamingScanner(p,entity));
+        naming.put(p,new NamingScanner(p,entity));
     }
 
     @EventHandler
     public void onScannerBreak(HangingBreakEvent e) {
+        for (Player p : naming.keySet()) {
+            NamingScanner rs = naming.get(p);
+            if (rs.getFrame() == e.getEntity()) {
+                naming.remove(p);
+                p.sendMessage("Scanner creation cancelled");
+                return;
+            }
+        }
         Scanner scanner = plugin.getScanner(e.getEntity());
         if (scanner == null) return;
         onScannerBreak(e.getEntity().getLocation(),scanner);
@@ -82,13 +89,13 @@ public class Listener implements org.bukkit.event.Listener {
     @EventHandler
     public void onScannerRename(AsyncPlayerChatEvent e) {
         Player p = e.getPlayer();
-        if (!renaming.containsKey(p)) return;
+        if (!naming.containsKey(p)) return;
         e.setCancelled(true);
         String name = e.getMessage();
-        RenamingScanner rename = renaming.get(p);
+        NamingScanner name2 = naming.get(p);
         plugin.getServer().getScheduler().runTask(plugin,()->{
-            boolean renamed = rename.renamed(name);
-            if (renamed) renaming.remove(p);
+            boolean renamed = name2.named(name);
+            if (renamed) naming.remove(p);
         });
     }
 
@@ -130,7 +137,7 @@ public class Listener implements org.bukkit.event.Listener {
         Location loc = block.getLocation();
         for (Scanner scanner : plugin.scanners.values()) {
             Entity entity = plugin.getServer().getEntity(scanner.getFrameID());
-            if (entity.getLocation().getBlock().getLocation().equals(loc)) {
+            if (entity != null && entity.getLocation().getBlock().getLocation().equals(loc)) {
                 e.setCancelled(!onClick(e.getPlayer(),scanner,e.getHand(),block));
                 return;
             }
