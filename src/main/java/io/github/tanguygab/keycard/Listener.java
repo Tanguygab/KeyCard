@@ -8,13 +8,12 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.Powerable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.hanging.HangingBreakEvent;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -51,12 +50,13 @@ public class Listener implements org.bukkit.event.Listener {
         if (!isScanner) return;
         Entity entity = e.getEntity();
         if (entity.getType() != EntityType.ITEM_FRAME) return;
+        ((ItemFrame)entity).setFixed(true);
         Player p = e.getPlayer();
         naming.put(p,new NamingScanner(p,entity));
     }
 
     @EventHandler
-    public void onScannerBreak(HangingBreakEvent e) {
+    public void onScannerBreakInCreative(HangingBreakByEntityEvent e) {
         for (Player p : naming.keySet()) {
             NamingScanner rs = naming.get(p);
             if (rs.getFrame() == e.getEntity()) {
@@ -67,23 +67,14 @@ public class Listener implements org.bukkit.event.Listener {
         }
         Scanner scanner = plugin.getScanner(e.getEntity());
         if (scanner == null) return;
-        onScannerBreak(e.getEntity().getLocation(),scanner);
-    }
-
-    @EventHandler
-    public void onItemInFrameBreak(EntityDamageByEntityEvent e) {
-        Scanner scanner = plugin.getScanner(e.getEntity());
-        if (scanner == null) return;
-        Entity entity = e.getEntity();
-        Location loc = entity.getLocation();
-        onScannerBreak(loc,scanner);
-        entity.remove();
-        loc.getBlock().setType(Material.AIR);
-    }
-
-    public void onScannerBreak(Location loc, Scanner scanner) {
+        if (e.getRemover() == null || !e.getRemover().getUniqueId().toString().equals(scanner.getOwner().toString())){
+            e.setCancelled(true);
+            return;
+        }
         plugin.removeScanner(scanner);
-        loc.getWorld().dropItem(loc,Utils.craftScanner());
+        Location loc = e.getEntity().getLocation();
+        loc.getBlock().setType(Material.AIR);
+        ((Player)e.getRemover()).getInventory().addItem(Utils.craftScanner());
     }
 
     @EventHandler
@@ -106,22 +97,21 @@ public class Listener implements org.bukkit.event.Listener {
         Scanner scanner = plugin.getScanner(entity);
         if (scanner == null) return;
         e.setCancelled(true);
-        onClick(p,scanner,e.getHand(),entity.getLocation().getBlock());
+        onClick(p,scanner,e.getHand());
     }
 
-    public boolean onClick(Player p, Scanner scanner, EquipmentSlot hand, Block block) {
+    public void onClick(Player p, Scanner scanner, EquipmentSlot hand) {
         if (scanner.getOwner().toString().equals(p.getUniqueId().toString()) && p.isSneaking()) {
             if (hand == EquipmentSlot.HAND)
                 scanner.open(p);
-            return false;
+            return;
         }
 
-        if (!scanner.canUse(p.getInventory().getItem(hand))) return false;
+        if (!scanner.canUse(p.getInventory().getItem(hand))) return;
 
         ScannerMode mode = scanner.getMode();
         mode.load(scanner);
         plugin.getServer().getScheduler().runTaskLater(plugin,()-> mode.unload(scanner),15);
-        return true;
     }
 
     @EventHandler
@@ -133,7 +123,8 @@ public class Listener implements org.bukkit.event.Listener {
         for (Scanner scanner : plugin.scanners.values()) {
             Entity entity = plugin.getServer().getEntity(scanner.getFrameID());
             if (entity != null && entity.getLocation().getBlock().getLocation().equals(loc)) {
-                e.setCancelled(!onClick(e.getPlayer(),scanner,e.getHand(),block));
+                onClick(e.getPlayer(),scanner,e.getHand());
+                e.setCancelled(true);
                 return;
             }
         }
@@ -159,7 +150,7 @@ public class Listener implements org.bukkit.event.Listener {
                     p.sendMessage("You need to insert a keycard to link!");
                     return;
                 }
-                Utils.linkScannerToCard(card,scannerName);
+                Utils.linkScannerToCard(card,scanner);
                 p.sendMessage("Keycard linked!");
                 switchLinkItem(item,true);
             }
@@ -170,17 +161,25 @@ public class Listener implements org.bukkit.event.Listener {
                     return;
                 }
 
-                Utils.unlinkScannerToCard(card,scannerName);
+                Utils.unlinkScannerToCard(card,scanner);
                 p.sendMessage("Keycard unlinked!");
                 switchLinkItem(item,false);
             }
-            case ("Switch Mode") -> {
+            case "Switch Mode" -> {
                 ScannerMode newMode = scanner.switchMode();
 
                 ItemMeta meta = item.getItemMeta();
                 meta.setLore(List.of("",Utils.colors("&7Mode: ")+newMode.getDesc()));
                 item.setItemMeta(meta);
                 item.setType(newMode.getMat());
+            }
+             case "Delete Scanner" -> {
+                p.closeInventory();
+                plugin.removeScanner(scanner);
+                Entity entity = plugin.getServer().getEntity(scanner.getFrameID());
+                entity.getLocation().getBlock().setType(Material.AIR);
+                entity.remove();
+                p.getInventory().addItem(Utils.craftScanner());
             }
             default -> {
                 ItemStack cursor = e.getCursor();

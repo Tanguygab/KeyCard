@@ -69,8 +69,8 @@ public class Scanner {
         byte cardType = data.get(Utils.isKeycardKey,PersistentDataType.BYTE);
         String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);
         switch (cardType) {
-            case 1 -> {return name.equals(str);}
-            case 2 -> {return List.of(str.split("\\|\\|")).contains(name);}
+            case 1 -> {return frameID.toString().equals(str);}
+            case 2 -> {return List.of(str.split("\\|\\|")).contains(frameID.toString());}
             default -> {return false;}
         }
     }
@@ -101,7 +101,6 @@ public class Scanner {
         metaFiller.setDisplayName(Utils.colors("&r"));
         filler.setItemMeta(metaFiller);
         inv.setItem(2,filler);
-        inv.setItem(3,filler);
 
         ItemStack linker = new ItemStack(Material.TRIPWIRE_HOOK);
         ItemMeta metaLinker = linker.getItemMeta();
@@ -115,7 +114,14 @@ public class Scanner {
         metaMode.setDisplayName(Utils.colors("&fSwitch Mode"));
         metaMode.setLore(List.of("",Utils.colors("&7Mode: ")+this.mode.getDesc()));
         mode.setItemMeta(metaMode);
-        inv.setItem(4,mode);
+        inv.setItem(3,mode);
+
+        ItemStack delete = new ItemStack(Material.BARRIER);
+        ItemMeta metaDelete = delete.getItemMeta();
+        metaDelete.setDisplayName(Utils.colors("&4Delete Scanner"));
+        metaDelete.setLore(List.of("",Utils.colors("&cDeletes this scanner!")));
+        delete.setItemMeta(metaDelete);
+        inv.setItem(4,delete);
 
         p.openInventory(inv);
     }

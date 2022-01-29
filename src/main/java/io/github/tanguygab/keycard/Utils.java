@@ -57,7 +57,7 @@ public class Utils {
         ItemStack scanner = new ItemStack(Material.ITEM_FRAME);
         ItemMeta meta = scanner.getItemMeta();
         meta.setDisplayName(colors("&8[&6Scanner&8]"));
-        meta.getPersistentDataContainer().set(isScannerKey, PersistentDataType.BYTE,(byte)2);
+        meta.getPersistentDataContainer().set(isScannerKey, PersistentDataType.BYTE,(byte)1);
         scanner.setItemMeta(meta);
         return scanner;
     }
@@ -85,30 +85,30 @@ public class Utils {
         return card != null && !card.getType().isAir() && card.getItemMeta() != null && card.getItemMeta().getPersistentDataContainer().has(isKeycardKey,PersistentDataType.BYTE);
     }
 
-    public static void linkScannerToCard(ItemStack card, String scanner) {
+    public static void linkScannerToCard(ItemStack card, Scanner scanner) {
         ItemMeta meta = card.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
         switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
             case 1 -> {
-                if (scanner.equals(data.get(scannerIdKey,PersistentDataType.STRING))) return;
-                data.set(scannerIdKey,PersistentDataType.STRING,scanner);
-                meta.setLore(List.of("",colors("&7Scanner: &f")+scanner));
+                if (scanner.getFrameID().toString().equals(data.get(scannerIdKey,PersistentDataType.STRING))) return;
+                data.set(scannerIdKey,PersistentDataType.STRING,scanner.getFrameID().toString());
+                meta.setLore(List.of("",colors("&7Scanner: &f")+scanner.getName()));
             }
             case 2 -> {
                 String scanners = data.get(scannerIdKey,PersistentDataType.STRING);
                 if (scanners == null) scanners = "";
-                if (List.of(scanners.split("\\|\\|")).contains(scanner)) return;
-                scanners+=(scanners.equals("") ? "" : "||")+scanner;
+                if (List.of(scanners.split("\\|\\|")).contains(scanner.getFrameID().toString())) return;
+                scanners+=(scanners.equals("") ? "" : "||")+scanner.getFrameID().toString();
                 data.set(scannerIdKey,PersistentDataType.STRING,String.join("||",scanners));
                 List<String> lore = meta.getLore();
-                lore.add(colors(" &7- &f"+scanner));
+                lore.add(colors(" &7- &f"+scanner.getName()));
                 meta.setLore(lore);
             }
         }
         card.setItemMeta(meta);
     }
 
-    public static void unlinkScannerToCard(ItemStack card, String scanner) {
+    public static void unlinkScannerToCard(ItemStack card, Scanner scanner) {
         ItemMeta meta = card.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
         switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
@@ -118,11 +118,11 @@ public class Utils {
             }
             case 2 -> {
                 List<String> lore = meta.getLore();
-                lore.remove(colors(" &7- &f" + scanner));
+                lore.remove(colors(" &7- &f" + scanner.getName()));
                 meta.setLore(lore);
                 String scanners = data.get(scannerIdKey,PersistentDataType.STRING);
                 List<String> scannersList = new ArrayList<>(List.of(scanners.split("\\|\\|")));
-                scannersList.remove(scanner);
+                scannersList.remove(scanner.getFrameID().toString());
                 data.set(scannerIdKey,PersistentDataType.STRING,String.join("||",scannersList));
             }
         }
