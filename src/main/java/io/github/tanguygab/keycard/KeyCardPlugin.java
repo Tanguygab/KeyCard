@@ -18,6 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.*;
 import java.util.List;
@@ -26,6 +27,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
 
     private static KeyCardPlugin instance;
 
+    public ConfigurationFile configFile;
     public ConfigurationFile scannersFile;
     public final Map<String, Scanner> scanners = new HashMap<>();
     public Image image;
@@ -37,15 +39,26 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
     @Override
     public void onEnable() {
         instance = this;
-        image = new ImageIcon(getClass().getResource("/scanner.png")).getImage();
-        File file = new File(getDataFolder(), "scanners.yml");
+        File fileImage = new File(getDataFolder(),("/scanner.png"));
         try {
-            if (!file.exists()) file.createNewFile();
-            scannersFile = new YamlConfigurationFile(null, file);
+            image = fileImage.exists() ? new ImageIcon(fileImage.toURI().toURL()).getImage() : new ImageIcon(getClass().getResource("/scanner.png")).getImage();
+            if (image != null) {
+                BufferedImage resizedImage = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+                Graphics2D graphics2D = resizedImage.createGraphics();
+                graphics2D.drawImage(image, 0, 0, 128, 128, null);
+                graphics2D.dispose();
+                image = resizedImage;
+            }
+            configFile = new YamlConfigurationFile(getResource("config.yml"), new File(getDataFolder(), "config.yml"));
+
+            File fileScanners = new File(getDataFolder(), "scanners.yml");
+            if (!fileScanners.exists()) fileScanners.createNewFile();
+            scannersFile = new YamlConfigurationFile(null, fileScanners);
+
             Map<String,Object> cfgmap = new HashMap<>(scannersFile.getValues());
             for (String name : cfgmap.keySet()) {
                 Map<String,String> map = (Map<String, String>) cfgmap.get(name);
-                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.valueOf(map.get("mode")));
+                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.get(map.get("mode")));
                 addScanner(scanner);
             }
         } catch (Exception e) {e.printStackTrace();}
@@ -75,21 +88,28 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
         switch (args[0].toLowerCase()) {
             case "give" -> {
                 String arg = args.length > 1 ? args[1] : "";
-                PlayerInventory inv = ((Player)sender).getInventory();
+                Player player = args.length > 2 ? getServer().getPlayer(args[1]) : (Player) sender;
+                if (player == null) {
+                    sender.sendMessage("This player isn't online!");
+                    return true;
+                }
+                PlayerInventory inv = player.getInventory();
+                ItemStack item = null;
                 switch (arg.toLowerCase()) {
-                    case "keycard" -> {
-                        ItemStack keycard = Utils.craftKeycard();
-                        inv.addItem(keycard);
-                    }
+                    case "keycard" -> item = Utils.craftKeycard();
                     case "multicard" -> {
-                        ItemStack multicard = Utils.craftMultiKeycard();
-                        inv.addItem(multicard);
+                        if (!configFile.getBoolean("multi-card.enabled",true)) {
+                            sender.sendMessage("This item is disabled.");
+                            return true;
+                        }
+                        item = Utils.craftMultiKeycard();
                     }
-                    case "scanner" -> {
-                        ItemStack scanner = Utils.craftScanner();
-                        inv.addItem(scanner);
-                    }
+                    case "scanner" -> item = Utils.craftScanner();
                     default -> sender.sendMessage("You have to specify `keycard` or `scanner`");
+                }
+                if (item != null) {
+                    inv.addItem(item);
+                    sender.sendMessage("Gave 1 "+item.getItemMeta().getDisplayName()+" to "+player.getName());
                 }
             }
             case "reload" -> {
@@ -114,7 +134,11 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) return List.of("give","reload", "scanners");
-        if ("give".equalsIgnoreCase(args[0]) && args.length == 2) return List.of("keycard","scanner","multicard");
+        if ("give".equalsIgnoreCase(args[0]) && args.length == 2) {
+            List<String> items = new ArrayList<>(List.of("keycard","scanner"));
+            if (configFile.getBoolean("multi-card.enabled",true)) items.add("multicard");
+            return items;
+        }
         return null;
     }
 

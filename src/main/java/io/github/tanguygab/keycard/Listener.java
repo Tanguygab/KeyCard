@@ -13,6 +13,9 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockEvent;
+import org.bukkit.event.block.BlockPhysicsEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -112,6 +115,20 @@ public class Listener implements org.bukkit.event.Listener {
         ScannerMode mode = scanner.getMode();
         mode.load(scanner);
         plugin.getServer().getScheduler().runTaskLater(plugin,()-> mode.unload(scanner),15);
+    }
+
+    @EventHandler
+    public void onScannerButtonBreak(BlockPhysicsEvent e) {
+        Block block = e.getBlock();
+        if (block.getType() != Material.STONE_BUTTON) return;
+        Location loc = block.getLocation();
+        for (Scanner scanner : plugin.scanners.values()) {
+            Entity entity = plugin.getServer().getEntity(scanner.getFrameID());
+            if (entity != null && entity.getLocation().getBlock().getLocation().equals(loc)) {
+                e.setCancelled(true);
+                return;
+            }
+        }
     }
 
     @EventHandler

@@ -1,0 +1,14 @@
+keycard:
+  craft: true
+
+multi-card:
+  enabled: true
+  craft: true
+
+scanner:
+  craft: true
+  image: true
+  allowed-modes:
+    - ACTIVE_ON_SWIPE
+    - INACTIVE_ON_SWIPE
+    - LEVER

@@ -9,7 +9,8 @@ public class MapRender extends MapRenderer {
 
     @Override
     public void render(MapView map, MapCanvas canvas, Player player) {
-        canvas.drawImage(0,0,KeyCardPlugin.get().image);
+        if (KeyCardPlugin.get().image != null)
+            canvas.drawImage(0,0,KeyCardPlugin.get().image);
     }
 
 }

@@ -34,11 +34,13 @@ public class Utils {
 
     public static void addMap(Entity entity, Scanner scanner) {
         ItemFrame frame = (ItemFrame) entity;
-        ItemStack map =  frame.getItem().getType() == Material.FILLED_MAP ? frame.getItem() : new ItemStack(Material.FILLED_MAP);
+        if (!frame.isFixed()) frame.setFixed(true);
+        ItemStack map = frame.getItem().getType() == Material.FILLED_MAP ? frame.getItem() : new ItemStack(Material.FILLED_MAP);
         MapMeta meta = (MapMeta) map.getItemMeta();
         MapView view = Bukkit.getServer().createMap(Bukkit.getServer().getWorlds().get(0));
         view.getRenderers().clear();
-        view.addRenderer(new MapRender());
+        if (KeyCardPlugin.get().configFile.getBoolean("scanner.image",true) && KeyCardPlugin.get().image != null)
+            view.addRenderer(new MapRender());
         meta.setMapView(view);
         map.setItemMeta(meta);
         frame.setItem(map);

@@ -47,9 +47,21 @@ public enum ScannerMode {
 
     public static ScannerMode switchMode(ScannerMode oldMode) {
 
-        List<ScannerMode> list = List.of(values());
-        if (list.indexOf(oldMode)+1 >= list.size())
-            return list.get(0);
-        return list.get(list.indexOf(oldMode)+1);
+        List<String> allowedModes = KeyCardPlugin.get().configFile.getStringList("scanner.allowed-modes");
+        if (allowedModes == null || allowedModes.isEmpty()) return ACTIVE_ON_SWIPE;
+
+        ScannerMode newMode;
+        if (allowedModes.indexOf(oldMode.toString())+1 >= allowedModes.size()) newMode = get(allowedModes.get(0));
+        else newMode = get(allowedModes.get(allowedModes.indexOf(oldMode.toString()) + 1));
+
+        return newMode == null ? ACTIVE_ON_SWIPE : newMode;
+    }
+
+    public static ScannerMode get(String str) {
+        for (ScannerMode mode : values()) {
+            if (mode.toString().equalsIgnoreCase(str.replace(" ","_")))
+                return mode;
+        }
+        return null;
     }
 }

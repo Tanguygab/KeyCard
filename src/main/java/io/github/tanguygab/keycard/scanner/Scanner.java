@@ -40,9 +40,7 @@ public class Scanner {
         if (entity == null) return;
         Utils.addMap(entity,this);
         setLoaded();
-
     }
-
 
     public String getName() {
         return name;
