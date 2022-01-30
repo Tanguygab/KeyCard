@@ -118,20 +118,6 @@ public class Listener implements org.bukkit.event.Listener {
     }
 
     @EventHandler
-    public void onScannerButtonBreak(BlockPhysicsEvent e) {
-        Block block = e.getBlock();
-        if (block.getType() != Material.STONE_BUTTON) return;
-        Location loc = block.getLocation();
-        for (Scanner scanner : plugin.scanners.values()) {
-            Entity entity = plugin.getServer().getEntity(scanner.getFrameID());
-            if (entity != null && entity.getLocation().getBlock().getLocation().equals(loc)) {
-                e.setCancelled(true);
-                return;
-            }
-        }
-    }
-
-    @EventHandler
     public void onScannerButtonClick(PlayerInteractEvent e) {
         Block block = e.getClickedBlock();
         if (block == null || block.getType() != Material.STONE_BUTTON) return;

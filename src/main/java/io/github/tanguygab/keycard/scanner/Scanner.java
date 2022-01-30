@@ -85,6 +85,9 @@ public class Scanner {
 
     public void setStatus(boolean activated) {
         Block block = Bukkit.getServer().getEntity(frameID).getLocation().getBlock();
+        if (block.getType() != Material.STONE_BUTTON) {
+            block.setType(Material.STONE_BUTTON);
+        }
         Powerable data = (Powerable) block.getBlockData();
         data.setPowered(activated);
         block.setBlockData(data);
