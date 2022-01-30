@@ -3,7 +3,6 @@ package io.github.tanguygab.keycard.scanner;
 import io.github.tanguygab.keycard.KeyCardPlugin;
 import org.bukkit.Material;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
