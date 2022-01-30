@@ -139,11 +139,11 @@ public class Listener implements org.bukkit.event.Listener {
     public void onRemoteCardClick(PlayerInteractEvent e) {
         ItemStack card = e.getItem();
         if (card == null || card.getType() != KeyCardEnum.REMOTE_CARD.getMat() || Utils.getKeyCardType(card) != 3) return;
+        e.setCancelled(true);
 
         Scanner scanner = Utils.getScanner(card);
         if (scanner == null) return;
         onClick(e.getPlayer(),scanner,e.getHand());
-        e.setCancelled(true);
     }
 
     @EventHandler
