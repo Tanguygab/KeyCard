@@ -74,7 +74,7 @@ public class Utils {
         ItemStack keycard = new ItemStack(type.getMat());
         ItemMeta meta = keycard.getItemMeta();
         meta.setDisplayName(colors("&8[&6"+type.getName()+"&8]"));
-        meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
+        meta.setLore(List.of("",colors("&7Scanner"+(type == KeyCardEnum.MULTI_CARD ? "s:" : ": &fNot Linked"))));
         meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,type.getNum());
         keycard.setItemMeta(meta);
         return keycard;

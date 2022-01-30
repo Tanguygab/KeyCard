@@ -101,13 +101,18 @@ public class Listener implements org.bukkit.event.Listener {
     }
 
     public void onClick(Player p, Scanner scanner, EquipmentSlot hand) {
+        ItemStack card = p.getInventory().getItem(hand);
+        byte type = Utils.getKeyCardType(card);
+        if (type == 3 && !plugin.configFile.getBoolean("remote-card.enabled",true)) return;
+
         if (scanner.getOwner().toString().equals(p.getUniqueId().toString()) && p.isSneaking()) {
             if (hand == EquipmentSlot.HAND)
                 scanner.open(p);
             return;
         }
 
-        if (!scanner.canUse(p.getInventory().getItem(hand))) return;
+        if (type == 2 && !plugin.configFile.getBoolean("multi-card.enabled",true)) return;
+        if (!scanner.canUse(card)) return;
 
         ScannerMode mode = scanner.getMode();
         mode.load(scanner);
@@ -133,7 +138,7 @@ public class Listener implements org.bukkit.event.Listener {
     @EventHandler
     public void onRemoteCardClick(PlayerInteractEvent e) {
         ItemStack card = e.getItem();
-        if (card == null || card.getType() != Material.REPEATER || Utils.getKeyCardType(card) != 3) return;
+        if (card == null || card.getType() != KeyCardEnum.REMOTE_CARD.getMat() || Utils.getKeyCardType(card) != 3) return;
 
         Scanner scanner = Utils.getScanner(card);
         if (scanner == null) return;

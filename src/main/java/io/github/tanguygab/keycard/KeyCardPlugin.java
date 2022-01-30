@@ -4,6 +4,7 @@ import io.github.tanguygab.keycard.config.ConfigurationFile;
 import io.github.tanguygab.keycard.config.YamlConfigurationFile;
 import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -118,7 +119,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                 }
                 if (item != null) {
                     inv.addItem(item);
-                    sender.sendMessage("Gave 1 "+item.getItemMeta().getDisplayName()+" to "+player.getName());
+                    sender.sendMessage("Gave 1 "+item.getItemMeta().getDisplayName()+ ChatColor.RESET +" to "+player.getName());
                 }
             }
             case "reload" -> {
