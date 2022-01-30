@@ -70,35 +70,46 @@ public class Utils {
         scanner.setItemMeta(meta);
         return scanner;
     }
-    public static ItemStack craftKeycard() {
-        ItemStack keycard = new ItemStack(Material.PAPER);
+    public static ItemStack craftKeycard(KeyCardEnum type) {
+        ItemStack keycard = new ItemStack(type.getMat());
         ItemMeta meta = keycard.getItemMeta();
-        meta.setDisplayName(colors("&8[&6Keycard&8]"));
+        meta.setDisplayName(colors("&8[&6"+type.getName()+"&8]"));
         meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
-        meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,(byte)1);
-        keycard.setItemMeta(meta);
-        return keycard;
-    }
-
-    public static ItemStack craftMultiKeycard() {
-        ItemStack keycard = new ItemStack(Material.BOOK);
-        ItemMeta meta = keycard.getItemMeta();
-        meta.setDisplayName(colors("&8[&6Multi-KeyCard&8]"));
-        meta.setLore(List.of("",colors("&7Scanners:")));
-        meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,(byte)2);
+        meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,type.getNum());
         keycard.setItemMeta(meta);
         return keycard;
     }
 
     public static boolean isKeycard(ItemStack card) {
-        return card != null && !card.getType().isAir() && card.getItemMeta() != null && card.getItemMeta().getPersistentDataContainer().has(isKeycardKey,PersistentDataType.BYTE);
+        return getKeyCardType(card) > 0;
+    }
+    public static byte getKeyCardType(ItemStack card) {
+        if (card == null) return 0;
+        ItemMeta meta = card.getItemMeta();
+        if (meta == null) return 0;
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        if (!data.has(isKeycardKey,PersistentDataType.BYTE)) return 0;
+        return data.get(isKeycardKey,PersistentDataType.BYTE);
+    }
+    public static Scanner getScanner(ItemStack card) {
+        if (card == null) return null;
+        ItemMeta meta = card.getItemMeta();
+        if (meta == null) return null;
+        PersistentDataContainer data = meta.getPersistentDataContainer();
+        if (!data.has(scannerIdKey,PersistentDataType.STRING)) return null;
+        String uuid = data.get(scannerIdKey,PersistentDataType.STRING);
+        for (Scanner scanner : KeyCardPlugin.get().scanners.values()) {
+            if (scanner.getFrameID().toString().equals(uuid))
+                return scanner;
+        }
+        return null;
     }
 
     public static void linkScannerToCard(ItemStack card, Scanner scanner) {
         ItemMeta meta = card.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
         switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
-            case 1 -> {
+            case 1,3 -> {
                 if (scanner.getFrameID().toString().equals(data.get(scannerIdKey,PersistentDataType.STRING))) return;
                 data.set(scannerIdKey,PersistentDataType.STRING,scanner.getFrameID().toString());
                 meta.setLore(List.of("",colors("&7Scanner: &f")+scanner.getName()));
@@ -121,7 +132,7 @@ public class Utils {
         ItemMeta meta = card.getItemMeta();
         PersistentDataContainer data = meta.getPersistentDataContainer();
         switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
-            case 1 -> {
+            case 1,3 -> {
                 meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
                 meta.getPersistentDataContainer().remove(scannerIdKey);
             }

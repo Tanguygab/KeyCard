@@ -46,7 +46,7 @@ public class Listener implements org.bukkit.event.Listener {
         if (item == null || item.getType() != Material.ITEM_FRAME || item.getItemMeta() == null) return;
         PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
         if (!data.has(Utils.isScannerKey, PersistentDataType.BYTE)) return;
-        boolean isScanner = data.get(Utils.isScannerKey,PersistentDataType.BYTE) == (byte)1;
+        boolean isScanner = data.get(Utils.isScannerKey,PersistentDataType.BYTE) == 1;
         if (!isScanner) return;
         Entity entity = e.getEntity();
         if (entity.getType() != EntityType.ITEM_FRAME) return;
@@ -128,6 +128,16 @@ public class Listener implements org.bukkit.event.Listener {
                 return;
             }
         }
+    }
+
+    @EventHandler
+    public void onRemoteCardClick(PlayerInteractEvent e) {
+        ItemStack card = e.getItem();
+        if (card == null || card.getType() != Material.REPEATER || Utils.getKeyCardType(card) != 3) return;
+
+        Scanner scanner = Utils.getScanner(card);
+        if (scanner == null) return;
+        onClick(e.getPlayer(),scanner,e.getHand());
     }
 
     @EventHandler

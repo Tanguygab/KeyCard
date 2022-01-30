@@ -67,7 +67,7 @@ public class Scanner {
         byte cardType = data.get(Utils.isKeycardKey,PersistentDataType.BYTE);
         String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);
         switch (cardType) {
-            case 1 -> {return frameID.toString().equals(str);}
+            case 1,3 -> {return frameID.toString().equals(str);}
             case 2 -> {return List.of(str.split("\\|\\|")).contains(frameID.toString());}
             default -> {return false;}
         }

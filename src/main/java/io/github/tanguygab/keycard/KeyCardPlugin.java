@@ -105,13 +105,13 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                 PlayerInventory inv = player.getInventory();
                 ItemStack item = null;
                 switch (arg.toLowerCase()) {
-                    case "keycard" -> item = Utils.craftKeycard();
-                    case "multicard" -> {
-                        if (!configFile.getBoolean("multi-card.enabled",true)) {
-                            sender.sendMessage("This item is disabled.");
+                    case "keycard" -> item = Utils.craftKeycard(KeyCardEnum.KEYCARD);
+                    case "multi-card","remote-card" -> {
+                        if (!configFile.getBoolean(arg.toLowerCase()+".enabled",true)) {
+                            sender.sendMessage("This keycard is disabled.");
                             return true;
                         }
-                        item = Utils.craftMultiKeycard();
+                        item = Utils.craftKeycard(KeyCardEnum.get(arg));
                     }
                     case "scanner" -> item = Utils.craftScanner();
                     default -> sender.sendMessage("You have to specify `keycard` or `scanner`");
@@ -145,7 +145,8 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
         if (args.length == 1) return List.of("give","reload", "scanners");
         if ("give".equalsIgnoreCase(args[0]) && args.length == 2) {
             List<String> items = new ArrayList<>(List.of("keycard","scanner"));
-            if (configFile.getBoolean("multi-card.enabled",true)) items.add("multicard");
+            if (configFile.getBoolean("multi-card.enabled",true)) items.add("multi-card");
+            if (configFile.getBoolean("remote-card.enabled",true)) items.add("remote-card");
             return items;
         }
         return null;
