@@ -7,8 +7,10 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.FaceAttachable;
 import org.bukkit.block.data.Powerable;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.ItemFrame;
@@ -49,7 +51,12 @@ public class Utils {
         if (block.getType() != Material.STONE_BUTTON)
             block.setType(Material.STONE_BUTTON);
         BlockData data = Bukkit.getServer().createBlockData(Material.STONE_BUTTON);
-        if (data instanceof Directional directional) directional.setFacing(entity.getFacing());
+        if (data instanceof Directional directional) {
+            if (entity.getFacing() != BlockFace.DOWN && entity.getFacing() != BlockFace.UP)
+                directional.setFacing(entity.getFacing());
+            else if (data instanceof FaceAttachable fa)
+                fa.setAttachedFace(entity.getFacing() == BlockFace.UP ? FaceAttachable.AttachedFace.FLOOR : FaceAttachable.AttachedFace.CEILING);
+        }
         if (data instanceof Powerable powerable) powerable.setPowered(scanner.getMode() == ScannerMode.INACTIVE_ON_SWIPE);
         block.setBlockData(data);
     }
