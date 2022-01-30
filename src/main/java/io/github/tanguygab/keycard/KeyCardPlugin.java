@@ -55,10 +55,19 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
             if (!fileScanners.exists()) fileScanners.createNewFile();
             scannersFile = new YamlConfigurationFile(null, fileScanners);
 
+            ScannerMode.allowedModes = new ArrayList<>();
+            List<String> modes = configFile.getStringList("scanner.allowed-modes");
+            modes.forEach(str-> {
+                ScannerMode mode = ScannerMode.get(str,false);
+                if (mode != null)
+                    ScannerMode.allowedModes.add(mode);
+            });
+            if (ScannerMode.allowedModes.isEmpty()) ScannerMode.allowedModes.add(ScannerMode.ACTIVE_ON_SWIPE);
+
             Map<String,Object> cfgmap = new HashMap<>(scannersFile.getValues());
             for (String name : cfgmap.keySet()) {
                 Map<String,String> map = (Map<String, String>) cfgmap.get(name);
-                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.get(map.get("mode")));
+                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.get(map.get("mode"),true));
                 addScanner(scanner);
             }
         } catch (Exception e) {e.printStackTrace();}

@@ -3,6 +3,7 @@ package io.github.tanguygab.keycard.scanner;
 import io.github.tanguygab.keycard.KeyCardPlugin;
 import org.bukkit.Material;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -23,6 +24,7 @@ public enum ScannerMode {
     private final Consumer<Scanner> load;
     private final Consumer<Scanner> unload;
 
+    public static List<ScannerMode> allowedModes;
 
     ScannerMode(Material mat, String desc, Consumer<Scanner> load, Consumer<Scanner> unload) {
         this.mat = mat;
@@ -47,21 +49,21 @@ public enum ScannerMode {
 
     public static ScannerMode switchMode(ScannerMode oldMode) {
 
-        List<String> allowedModes = KeyCardPlugin.get().configFile.getStringList("scanner.allowed-modes");
-        if (allowedModes == null || allowedModes.isEmpty()) return ACTIVE_ON_SWIPE;
+        if (allowedModes.isEmpty()) return ACTIVE_ON_SWIPE;
 
         ScannerMode newMode;
-        if (allowedModes.indexOf(oldMode.toString())+1 >= allowedModes.size()) newMode = get(allowedModes.get(0));
-        else newMode = get(allowedModes.get(allowedModes.indexOf(oldMode.toString()) + 1));
+        if (allowedModes.indexOf(oldMode)+1 >= allowedModes.size()) newMode = allowedModes.get(0);
+        else newMode = allowedModes.get(allowedModes.indexOf(oldMode) + 1);
 
         return newMode == null ? ACTIVE_ON_SWIPE : newMode;
     }
 
-    public static ScannerMode get(String str) {
+    public static ScannerMode get(String str, boolean checkAllowed) {
+        str = str.replace(" ","_");
         for (ScannerMode mode : values()) {
-            if (mode.toString().equalsIgnoreCase(str.replace(" ","_")))
+            if (mode.toString().equalsIgnoreCase(str) && (!checkAllowed || allowedModes.contains(mode)))
                 return mode;
         }
-        return null;
+        return allowedModes.get(0);
     }
 }
