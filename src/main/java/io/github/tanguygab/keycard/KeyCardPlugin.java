@@ -6,6 +6,8 @@ import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,6 +17,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.ShapedRecipe;
+import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.swing.*;
@@ -64,6 +68,58 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
                     ScannerMode.allowedModes.add(mode);
             });
             if (ScannerMode.allowedModes.isEmpty()) ScannerMode.allowedModes.add(ScannerMode.ACTIVE_ON_SWIPE);
+
+            NamespacedKey scannerKey = new NamespacedKey(this, "scanner");
+            if (configFile.getBoolean("scanner.craft",true)) {
+                ShapedRecipe scannerRecipe = new ShapedRecipe(scannerKey, Utils.craftScanner());
+                scannerRecipe.shape(
+                        " R ",
+                        "BF ",
+                        " R ");
+                scannerRecipe.setIngredient('B', Material.STONE_BUTTON);
+                scannerRecipe.setIngredient('F', Material.ITEM_FRAME);
+                scannerRecipe.setIngredient('R', Material.REDSTONE);
+                if (getServer().getRecipe(scannerKey) != null) getServer().removeRecipe(scannerKey);
+                getServer().addRecipe(scannerRecipe);
+            } else if (getServer().getRecipe(scannerKey) != null) getServer().removeRecipe(scannerKey);
+
+            NamespacedKey keycardKey = new NamespacedKey(this, "keycard");
+            if (configFile.getBoolean("keycard.craft",true)) {
+                ShapelessRecipe keycardRecipe = new ShapelessRecipe(keycardKey, Utils.craftKeycard(KeyCardEnum.KEYCARD));
+                keycardRecipe.addIngredient(Material.PAPER);
+                keycardRecipe.addIngredient(Material.REDSTONE);
+                if (getServer().getRecipe(keycardKey) != null) getServer().removeRecipe(keycardKey);
+                getServer().addRecipe(keycardRecipe);
+            } else if (getServer().getRecipe(keycardKey) != null) getServer().removeRecipe(keycardKey);
+
+            NamespacedKey multiCardKey = new NamespacedKey(this, "multi-card");
+            if (configFile.getBoolean("multi-card.enabled",true) && configFile.getBoolean("multi-card.craft",true)) {
+                ShapedRecipe multiCardRecipe = new ShapedRecipe(multiCardKey, Utils.craftKeycard(KeyCardEnum.MULTI_CARD));
+                multiCardRecipe.shape(
+                        " R ",
+                        " B ",
+                        "PPP");
+                multiCardRecipe.setIngredient('B', Material.BOOK);
+                multiCardRecipe.setIngredient('P', Material.PAPER);
+                multiCardRecipe.setIngredient('R', Material.REDSTONE);
+                if (getServer().getRecipe(multiCardKey) != null) getServer().removeRecipe(multiCardKey);
+                getServer().addRecipe(multiCardRecipe);
+            } else if (getServer().getRecipe(scannerKey) != null) getServer().removeRecipe(scannerKey);
+
+            NamespacedKey remoteCardKey = new NamespacedKey(this, "remote-card");
+            if (configFile.getBoolean("remote-card.enabled",true) && configFile.getBoolean("remote-card.craft",true)) {
+                ShapedRecipe remoteCardRecipe = new ShapedRecipe(remoteCardKey, Utils.craftKeycard(KeyCardEnum.REMOTE_CARD));
+                remoteCardRecipe.shape(
+                        " R ",
+                        "ECE",
+                        "PPP");
+                remoteCardRecipe.setIngredient('E', Material.ENDER_PEARL);
+                remoteCardRecipe.setIngredient('C', Material.COMPARATOR);
+                remoteCardRecipe.setIngredient('P', Material.PAPER);
+                remoteCardRecipe.setIngredient('R', Material.REDSTONE);
+                if (getServer().getRecipe(remoteCardKey) != null) getServer().removeRecipe(remoteCardKey);
+                getServer().addRecipe(remoteCardRecipe);
+            } else if (getServer().getRecipe(scannerKey) != null) getServer().removeRecipe(scannerKey);
 
             Map<String,Object> cfgmap = new HashMap<>(scannersFile.getValues());
             for (String name : cfgmap.keySet()) {
