@@ -3,11 +3,16 @@ package io.github.tanguygab.keycard.scanner;
 import io.github.tanguygab.keycard.KeyCardPlugin;
 import io.github.tanguygab.keycard.Utils;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Powerable;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.block.CraftBlock;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -85,12 +90,21 @@ public class Scanner {
 
     public void setStatus(boolean activated) {
         Block block = Bukkit.getServer().getEntity(frameID).getLocation().getBlock();
-        if (block.getType() != Material.STONE_BUTTON) {
-            block.setType(Material.STONE_BUTTON);
-        }
+        Entity entity = Bukkit.getServer().getEntity(frameID);
+
+        if (block.getType() != Material.STONE_BUTTON) Utils.addMap(entity,this);
+
         Powerable data = (Powerable) block.getBlockData();
         data.setPowered(activated);
         block.setBlockData(data);
+
+        Location loc = entity.getLocation();
+        BlockRedstoneEvent eventRedstone = new BlockRedstoneEvent(block, activated ? 15 : 0, activated ? 0 : 15);
+        Bukkit.getServer().getPluginManager().callEvent(eventRedstone);
+
+        Directional directional = (Directional) block.getBlockData();
+        CraftBlock cblock = (CraftBlock) block;
+        ((CraftWorld)loc.getWorld()).getHandle().b(cblock.getPosition().a(CraftBlock.blockFaceToNotch(directional.getFacing().getOppositeFace())),cblock.getNMS().b());
     }
 
     public void open(Player p) {
