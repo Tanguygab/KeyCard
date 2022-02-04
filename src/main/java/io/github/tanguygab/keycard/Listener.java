@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
@@ -116,7 +117,7 @@ public class Listener implements org.bukkit.event.Listener {
 
         ScannerMode mode = scanner.getMode();
         mode.load(scanner);
-        plugin.getServer().getScheduler().runTaskLater(plugin,()-> mode.unload(scanner),15);
+        plugin.getServer().getScheduler().runTaskLater(plugin,()-> mode.unload(scanner),scanner.getTicks());
     }
 
     @EventHandler
@@ -180,6 +181,15 @@ public class Listener implements org.bukkit.event.Listener {
                 Utils.unlinkScannerToCard(card,scanner);
                 p.sendMessage("Keycard unlinked!");
                 switchLinkItem(item,false);
+            }
+            case "Change Delay" -> {
+                if (e.isLeftClick()) scanner.addTicks(e.isShiftClick() ? 10 : 1);
+                else if (e.isRightClick()) scanner.addTicks(e.isShiftClick() ? -10 : -1);
+                else if (e.getClick() == ClickType.MIDDLE) scanner.setTicks(15);
+
+                ItemMeta meta = item.getItemMeta();
+                meta.setLore(List.of("",Utils.colors("&7Ticks: ")+scanner.getTicks()));
+                item.setItemMeta(meta);
             }
             case "Switch Mode" -> {
                 ScannerMode newMode = scanner.switchMode();

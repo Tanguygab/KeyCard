@@ -124,7 +124,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
             Map<String,Object> cfgmap = new HashMap<>(scannersFile.getValues());
             for (String name : cfgmap.keySet()) {
                 Map<String,String> map = (Map<String, String>) cfgmap.get(name);
-                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.get(map.get("mode"),true));
+                Scanner scanner = new Scanner(name, UUID.fromString(map.get("frameID")), UUID.fromString(map.get("player")), ScannerMode.get(map.get("mode"),true),map.containsKey("ticks") ? Integer.parseInt(map.get("ticks")) : 15);
                 addScanner(scanner);
             }
         } catch (Exception e) {e.printStackTrace();}
@@ -224,6 +224,7 @@ public final class KeyCardPlugin extends JavaPlugin implements CommandExecutor {
         scannersFile.set(name+".player",scanner.getOwner().toString());
         scannersFile.set(name+".frameID",scanner.getFrameID().toString());
         scannersFile.set(name+".mode",scanner.getMode()+"");
+        scannersFile.set(name+".ticks",scanner.getTicks()+"");
     }
     public void removeScanner(Scanner scanner) {
         String name = scanner.getName();

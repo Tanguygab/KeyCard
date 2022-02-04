@@ -30,16 +30,18 @@ public class Scanner {
     private final UUID owner;
     private ScannerMode mode;
     private boolean loaded = false;
+    private int ticks;
 
     public Scanner(String name, UUID frameID, UUID owner) {
-        this(name,frameID,owner, ScannerMode.ACTIVE_ON_SWIPE);
+        this(name,frameID,owner,ScannerMode.ACTIVE_ON_SWIPE,15);
     }
 
-    public Scanner(String name, UUID frameID, UUID owner, ScannerMode mode) {
+    public Scanner(String name, UUID frameID, UUID owner, ScannerMode mode, int ticks) {
         this.name = name;
         this.frameID = frameID;
         this.owner = owner;
         this.mode = mode;
+        this.ticks = ticks;
 
         Entity entity = Bukkit.getServer().getEntity(frameID);
         if (entity == null) return;
@@ -58,6 +60,16 @@ public class Scanner {
     }
     public ScannerMode getMode() {
         return mode;
+    }
+    public int getTicks() {
+        return ticks;
+    }
+    public void addTicks(int ticks) {
+        setTicks(this.ticks+=ticks);
+    }
+    public void setTicks(int ticks) {
+        this.ticks = ticks;
+        KeyCardPlugin.get().scannersFile.set(name+".ticks",ticks+"");
     }
     public boolean isLoaded() {
         return loaded;
@@ -111,18 +123,19 @@ public class Scanner {
 
         Inventory inv = Bukkit.getServer().createInventory(null, InventoryType.HOPPER, "Scanner menu: "+name);
 
-        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-        ItemMeta metaFiller = filler.getItemMeta();
-        metaFiller.setDisplayName(Utils.colors("&r"));
-        filler.setItemMeta(metaFiller);
-        inv.setItem(2,filler);
-
         ItemStack linker = new ItemStack(Material.TRIPWIRE_HOOK);
         ItemMeta metaLinker = linker.getItemMeta();
         metaLinker.setDisplayName(Utils.colors("&fLink Keycard"));
         metaLinker.setLore(List.of("",Utils.colors("&7Insert your keycard in"),Utils.colors("&7the next slot to link it")));
         linker.setItemMeta(metaLinker);
         inv.setItem(0,linker);
+
+        ItemStack delay = new ItemStack(Material.CLOCK);
+        ItemMeta metaDelay = delay.getItemMeta();
+        metaDelay.setDisplayName(Utils.colors("&fChange Delay"));
+        metaDelay.setLore(List.of("",Utils.colors("&7Ticks: ")+getTicks()));
+        delay.setItemMeta(metaDelay);
+        inv.setItem(2,delay);
 
         ItemStack mode = new ItemStack(this.mode.getMat());
         ItemMeta metaMode = mode.getItemMeta();
