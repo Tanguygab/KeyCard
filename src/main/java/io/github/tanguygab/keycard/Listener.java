@@ -112,8 +112,7 @@ public class Listener implements org.bukkit.event.Listener {
             return;
         }
 
-        if (type == null) return;
-        if (type.equals("multi") && !plugin.configFile.getBoolean("multi-card.enabled",true)) return;
+        if ("multi".equals(type) && !plugin.configFile.getBoolean("multi-card.enabled",true)) return;
         if (!scanner.canUse(card)) return;
 
         ScannerMode mode = scanner.getMode();
