@@ -110,7 +110,7 @@ public class Utils {
         if (meta == null) return;
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String type = data.get(keycardTypeKey,PersistentDataType.STRING);
-        if (type == null) return;
+        if (type == null) type = "";
         switch (type) {
             case "normal","remote" -> {
                 if (scanner.getFrameID().toString().equals(data.get(scannerIdKey,PersistentDataType.STRING))) return;
@@ -140,7 +140,7 @@ public class Utils {
         if (meta == null) return;
         PersistentDataContainer data = meta.getPersistentDataContainer();
         String type = data.get(keycardTypeKey,PersistentDataType.STRING);
-        if (type == null) return;
+        if (type == null) type = "";
         switch (type) {
             case "normal","remote" -> {
                 meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));

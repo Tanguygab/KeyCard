@@ -84,7 +84,7 @@ public class Scanner {
         if (keycard == null || keycard.getItemMeta() == null) return false;
         PersistentDataContainer data = keycard.getItemMeta().getPersistentDataContainer();
         String cardType = data.get(Utils.keycardTypeKey,PersistentDataType.STRING);
-        if (cardType == null) return false;
+        if (cardType == null) cardType = "";
         String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);
         switch (cardType) {
             case "normal","remote" -> {return frameID.toString().equals(str);}
