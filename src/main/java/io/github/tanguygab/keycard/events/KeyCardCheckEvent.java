@@ -1,24 +1,21 @@
 package io.github.tanguygab.keycard.events;
 
 import io.github.tanguygab.keycard.scanner.Scanner;
-import org.bukkit.event.Cancellable;
 import org.bukkit.inventory.ItemStack;
 
-public class KeyCardCheckEvent extends KeyCardEvent implements Cancellable {
+public class KeyCardCheckEvent extends KeyCardEvent {
 
-    private boolean isCancelled;
+    private Result result = Result.DEFAULT;
 
     public KeyCardCheckEvent(ItemStack item, Scanner scanner, String type) {
         super(item,scanner,type);
     }
 
-    @Override
-    public boolean isCancelled() {
-        return isCancelled;
+    public void setResult(Result newResult) {
+        result = newResult;
     }
 
-    @Override
-    public void setCancelled(boolean cancel) {
-        isCancelled = cancel;
+    public Result getResult() {
+        return result;
     }
 }

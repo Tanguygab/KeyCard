@@ -13,6 +13,7 @@ import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_18_R1.block.CraftBlock;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -91,7 +92,7 @@ public class Scanner {
             default -> {
                 KeyCardCheckEvent event = new KeyCardCheckEvent(keycard,this,cardType);
                 Bukkit.getServer().getPluginManager().callEvent(event);
-                return !event.isCancelled();
+                return event.getResult() == Event.Result.ALLOW;
             }
         }
     }
