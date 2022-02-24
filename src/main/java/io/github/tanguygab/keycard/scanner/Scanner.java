@@ -2,6 +2,7 @@ package io.github.tanguygab.keycard.scanner;
 
 import io.github.tanguygab.keycard.KeyCardPlugin;
 import io.github.tanguygab.keycard.Utils;
+import io.github.tanguygab.keycard.events.KeyCardCheckEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -79,14 +80,19 @@ public class Scanner {
     }
 
     public boolean canUse(ItemStack keycard) {
-        if (keycard == null || keycard.getItemMeta() == null || !keycard.getItemMeta().getPersistentDataContainer().has(Utils.scannerIdKey,PersistentDataType.STRING)) return false;
+        if (keycard == null || keycard.getItemMeta() == null) return false;
         PersistentDataContainer data = keycard.getItemMeta().getPersistentDataContainer();
-        byte cardType = data.get(Utils.isKeycardKey,PersistentDataType.BYTE);
+        String cardType = data.get(Utils.keycardTypeKey,PersistentDataType.STRING);
+        if (cardType == null) return false;
         String str = data.get(Utils.scannerIdKey,PersistentDataType.STRING);
         switch (cardType) {
-            case 1,3 -> {return frameID.toString().equals(str);}
-            case 2 -> {return List.of(str.split("\\|\\|")).contains(frameID.toString());}
-            default -> {return false;}
+            case "normal","remote" -> {return frameID.toString().equals(str);}
+            case "multi" -> {return str != null && List.of(str.split("\\|\\|")).contains(frameID.toString());}
+            default -> {
+                KeyCardCheckEvent event = new KeyCardCheckEvent(keycard,this,cardType);
+                Bukkit.getServer().getPluginManager().callEvent(event);
+                return event.isCancelled();
+            }
         }
     }
 

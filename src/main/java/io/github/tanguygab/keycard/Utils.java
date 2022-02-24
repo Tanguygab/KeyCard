@@ -1,5 +1,6 @@
 package io.github.tanguygab.keycard;
 
+import io.github.tanguygab.keycard.events.KeyCardLinkEvent;
 import io.github.tanguygab.keycard.scanner.Scanner;
 import io.github.tanguygab.keycard.scanner.ScannerMode;
 import org.bukkit.Bukkit;
@@ -28,7 +29,7 @@ public class Utils {
 
     public static NamespacedKey scannerIdKey = NamespacedKey.fromString("scanner-id",KeyCardPlugin.get());
     public static NamespacedKey isScannerKey = NamespacedKey.fromString("is-scanner",KeyCardPlugin.get());
-    public static NamespacedKey isKeycardKey = NamespacedKey.fromString("is-keycard",KeyCardPlugin.get());
+    public static NamespacedKey keycardTypeKey = NamespacedKey.fromString("keycard-type",KeyCardPlugin.get());
 
     public static String colors(String str) {
         return ChatColor.translateAlternateColorCodes('&',str);
@@ -61,7 +62,6 @@ public class Utils {
         block.setBlockData(data);
     }
 
-
     public static ItemStack craftScanner() {
         ItemStack scanner = new ItemStack(Material.ITEM_FRAME);
         ItemMeta meta = scanner.getItemMeta();
@@ -75,21 +75,21 @@ public class Utils {
         ItemMeta meta = keycard.getItemMeta();
         meta.setDisplayName(colors("&8[&6"+type.getName()+"&8]"));
         meta.setLore(List.of("",colors("&7Scanner"+(type == KeyCardEnum.MULTI_CARD ? "s:" : ": &fNot Linked"))));
-        meta.getPersistentDataContainer().set(isKeycardKey,PersistentDataType.BYTE,type.getNum());
+        meta.getPersistentDataContainer().set(keycardTypeKey,PersistentDataType.STRING,type.getType());
         keycard.setItemMeta(meta);
         return keycard;
     }
 
     public static boolean isKeycard(ItemStack card) {
-        return getKeyCardType(card) > 0;
+        return getKeyCardType(card) != null;
     }
-    public static byte getKeyCardType(ItemStack card) {
-        if (card == null) return 0;
+    public static String getKeyCardType(ItemStack card) {
+        if (card == null) return null;
         ItemMeta meta = card.getItemMeta();
-        if (meta == null) return 0;
+        if (meta == null) return null;
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        if (!data.has(isKeycardKey,PersistentDataType.BYTE)) return 0;
-        return data.get(isKeycardKey,PersistentDataType.BYTE);
+        if (!data.has(keycardTypeKey,PersistentDataType.STRING)) return null;
+        return data.get(keycardTypeKey,PersistentDataType.STRING);
     }
     public static Scanner getScanner(ItemStack card) {
         if (card == null) return null;
@@ -107,14 +107,17 @@ public class Utils {
 
     public static void linkScannerToCard(ItemStack card, Scanner scanner) {
         ItemMeta meta = card.getItemMeta();
+        if (meta == null) return;
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
-            case 1,3 -> {
+        String type = data.get(keycardTypeKey,PersistentDataType.STRING);
+        if (type == null) return;
+        switch (type) {
+            case "normal","remote" -> {
                 if (scanner.getFrameID().toString().equals(data.get(scannerIdKey,PersistentDataType.STRING))) return;
                 data.set(scannerIdKey,PersistentDataType.STRING,scanner.getFrameID().toString());
                 meta.setLore(List.of("",colors("&7Scanner: &f")+scanner.getName()));
             }
-            case 2 -> {
+            case "multi" -> {
                 String scanners = data.get(scannerIdKey,PersistentDataType.STRING);
                 if (scanners == null) scanners = "";
                 if (List.of(scanners.split("\\|\\|")).contains(scanner.getFrameID().toString())) return;
@@ -124,19 +127,26 @@ public class Utils {
                 lore.add(colors(" &7- &f"+scanner.getName()));
                 meta.setLore(lore);
             }
+            default -> {
+                KeyCardLinkEvent event = new KeyCardLinkEvent(card,scanner,type,false);
+                Bukkit.getServer().getPluginManager().callEvent(event);
+            }
         }
         card.setItemMeta(meta);
     }
 
     public static void unlinkScannerToCard(ItemStack card, Scanner scanner) {
         ItemMeta meta = card.getItemMeta();
+        if (meta == null) return;
         PersistentDataContainer data = meta.getPersistentDataContainer();
-        switch (data.get(isKeycardKey,PersistentDataType.BYTE)) {
-            case 1,3 -> {
+        String type = data.get(keycardTypeKey,PersistentDataType.STRING);
+        if (type == null) return;
+        switch (type) {
+            case "normal","remote" -> {
                 meta.setLore(List.of("",colors("&7Scanner: &fNot Linked")));
                 meta.getPersistentDataContainer().remove(scannerIdKey);
             }
-            case 2 -> {
+            case "multi" -> {
                 List<String> lore = meta.getLore();
                 lore.remove(colors(" &7- &f" + scanner.getName()));
                 meta.setLore(lore);
@@ -144,6 +154,10 @@ public class Utils {
                 List<String> scannersList = new ArrayList<>(List.of(scanners.split("\\|\\|")));
                 scannersList.remove(scanner.getFrameID().toString());
                 data.set(scannerIdKey,PersistentDataType.STRING,String.join("||",scannersList));
+            }
+            default -> {
+                KeyCardLinkEvent event = new KeyCardLinkEvent(card,scanner,type,true);
+                Bukkit.getServer().getPluginManager().callEvent(event);
             }
         }
         card.setItemMeta(meta);

@@ -103,8 +103,8 @@ public class Listener implements org.bukkit.event.Listener {
 
     public void onClick(Player p, Scanner scanner, EquipmentSlot hand) {
         ItemStack card = p.getInventory().getItem(hand);
-        byte type = Utils.getKeyCardType(card);
-        if (type == 3 && !plugin.configFile.getBoolean("remote-card.enabled",true)) return;
+        String type = Utils.getKeyCardType(card);
+        if ("remote".equals(type) && !plugin.configFile.getBoolean("remote-card.enabled",true)) return;
 
         if (scanner.getOwner().toString().equals(p.getUniqueId().toString()) && p.isSneaking()) {
             if (hand == EquipmentSlot.HAND)
@@ -112,7 +112,8 @@ public class Listener implements org.bukkit.event.Listener {
             return;
         }
 
-        if (type == 2 && !plugin.configFile.getBoolean("multi-card.enabled",true)) return;
+        if (type == null) return;
+        if (type.equals("multi") && !plugin.configFile.getBoolean("multi-card.enabled",true)) return;
         if (!scanner.canUse(card)) return;
 
         ScannerMode mode = scanner.getMode();
@@ -139,7 +140,7 @@ public class Listener implements org.bukkit.event.Listener {
     @EventHandler
     public void onRemoteCardClick(PlayerInteractEvent e) {
         ItemStack card = e.getItem();
-        if (card == null || card.getType() != KeyCardEnum.REMOTE_CARD.getMat() || Utils.getKeyCardType(card) != 3) return;
+        if (card == null || card.getType() != KeyCardEnum.REMOTE_CARD.getMat() || !Utils.getKeyCardType(card).equals("remote")) return;
         e.setCancelled(true);
 
         Scanner scanner = Utils.getScanner(card);
@@ -219,12 +220,13 @@ public class Listener implements org.bukkit.event.Listener {
     }
 
     public void processKeyCardMove(ItemStack item, InventoryClickEvent e, Scanner scanner) {
-        if (e.isShiftClick()) return; // because ofc you can't get the slot where it got shift clicked
+        int slot = e.getRawSlot();
+        if (e.isShiftClick() && slot > 4) slot = 1;
         if (item == null || item.getItemMeta() == null) return;
-        if (!item.getItemMeta().getPersistentDataContainer().has(Utils.isKeycardKey,PersistentDataType.BYTE)) return;
+        if (!Utils.isKeycard(item)) return;
         e.setCancelled(false);
 
-        if (e.getRawSlot() != 1) return;
+        if (slot != 1) return;
         ItemStack card = e.getCursor();
         ItemStack linkItem = e.getView().getItem(0);
         boolean canUse = scanner.canUse(card);
