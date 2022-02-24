@@ -91,7 +91,7 @@ public class Scanner {
             default -> {
                 KeyCardCheckEvent event = new KeyCardCheckEvent(keycard,this,cardType);
                 Bukkit.getServer().getPluginManager().callEvent(event);
-                return event.isCancelled();
+                return !event.isCancelled();
             }
         }
     }
