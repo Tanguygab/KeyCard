@@ -7,7 +7,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class KeyCardEvent extends Event {
 
-    private final HandlerList handlers = new HandlerList();
+    private static final HandlerList handlers = new HandlerList();
 
     private final ItemStack card;
     private final Scanner scanner;
@@ -33,6 +33,10 @@ public class KeyCardEvent extends Event {
 
     @Override
     public HandlerList getHandlers() {
+        return getHandlerList();
+    }
+
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 }
